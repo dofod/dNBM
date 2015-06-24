@@ -32,17 +32,17 @@ var Application = function(ip){
         message = JSON.parse(data.toString());
         if(message.type == 'CONNECT'){
             this.db[message.ip] = new Peer(message.ip);
-            console.log('New peer added '+this.db[message.ip]);
+            console.log('PEER_ADDED '+this.db[message.ip]);
+            this.socket.send(JSON.stringify({status:'PEER_ADDED'}));
         }
 
-        this.socket.send(data);
     }.bind(this);
     this.socket.on('message', this.onMessageRecieved);
 };
 
 var app = new Application('tcp://*:9001');
-var peer = new Peer('tcp://192.168.1.5:9001');
+/*var peer = new Peer('tcp://192.168.1.5:9001');
 peer.message(JSON.stringify({
     type:'CONNECT',
-    ip:'192.168.1.11'
-}));
+    ip:'tcp://192.168.1.11:9001'
+}));*/
