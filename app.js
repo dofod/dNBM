@@ -51,11 +51,11 @@ var Application = function(ip){
 
 var app = new Application('tcp://*:9001');
 if(process.argv.slice(2).length!=0){
-    var ip = process.argv.slice(2)
+    var ip = process.argv.slice(2)[0];
     var peer = new Peer(ip);
     peer.message(JSON.stringify({
         type:'CONNECT',
-        ip:ip,
+        ip:'tcp://192.168.1.100:9001',
         repeat:true
     }));
 }
