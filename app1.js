@@ -6,7 +6,6 @@ zmq = require('zmq');
 
 function Peer(ip){
     this.ip = ip;
-    console.log(ip)
     this.socket = zmq.socket('req');
     this.socket.connect(ip);
     console.log('Connected to '+ip);
@@ -34,14 +33,14 @@ var Application = function(ip){
         if(message.type == 'CONNECT'){
             if(message.repeat==true){
                 message.repeat = false;
-                for(var key in this.db){
-                    if(this.db.hasOwnProperty(key)){
-                        this.db[key].message(message);
+                for(var key in db){
+                    if(db.hasOwnProperty(key)){
+                        db[key].message(message);
                     }
                 }
             }
             this.db[message.ip] = new Peer(message.ip);
-            console.log('PEER_ADDED '+JSON.stringify(this.db[message.ip]));
+            console.log('PEER_ADDED '+this.db[message.ip]);
             this.socket.send(JSON.stringify({status:'PEER_ADDED'}));
         }
 
@@ -49,9 +48,9 @@ var Application = function(ip){
     this.socket.on('message', this.onMessageRecieved);
 };
 
-var app = new Application('tcp://*:9001');
+var app = new Application('tcp://*:9002');
 if(process.argv.slice(2).length!=0){
-    var ip = process.argv.slice(2)
+    var ip = process.argv.slice(2).toString();
     var peer = new Peer(ip);
     peer.message(JSON.stringify({
         type:'CONNECT',
