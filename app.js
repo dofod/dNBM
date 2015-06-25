@@ -3,6 +3,7 @@
  */
 
 zmq = require('zmq');
+ip = require('ip');
 
 function Peer(ip){
     this.ip = ip;
@@ -55,7 +56,7 @@ if(process.argv.slice(2).length!=0){
     var peer = new Peer(ip);
     peer.message(JSON.stringify({
         type:'CONNECT',
-        ip:'tcp://192.168.1.100:9001',
+        ip:'tcp://'+ip.address()+':9001',
         repeat:true
     }));
 }
