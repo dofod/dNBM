@@ -2,12 +2,11 @@
  * Created by Saurabh on 24/06/2015.
  */
 
-zmq = require('zmq');
-ip = require('ip');
+var zmq = require('zmq');
+var localIP = require('ip');
 
 function Peer(ip){
     this.ip = ip;
-    console.log(ip)
     this.socket = zmq.socket('req');
     this.socket.connect(ip);
     console.log('Connected to '+ip);
@@ -56,7 +55,7 @@ if(process.argv.slice(2).length!=0){
     var peer = new Peer(ip);
     peer.message(JSON.stringify({
         type:'CONNECT',
-        ip:'tcp://'+ip.address()+':9001',
+        ip:'tcp://'+localIP.address()+':9001',
         repeat:true
     }));
 }
