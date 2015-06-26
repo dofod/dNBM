@@ -4,7 +4,7 @@
 
 var zmq = require('zmq');
 var localIP = require('ip');
-var APP_PORT = '9001';
+var APP_PORT = '9003';
 function Peer(ip){
     this.ip = ip;
     this.socket = zmq.socket('req');
