@@ -68,6 +68,7 @@ function Application(ip){
                 for (var key in this.db) {
                     if (this.db.hasOwnProperty(key)) {
                         this.db[key].message(JSON.stringify({type:'GET_PEER_LIST'}));
+                        this.db[key].message(79,9);
                     }
                 }
             }
