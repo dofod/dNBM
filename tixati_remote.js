@@ -21,53 +21,55 @@ function TixatiRemote(host, port, username, password){
         console.log(self.transfers);
     };
 
-    this.startTransfer = function(){
-        var postData = querystring.stringify({
+    this.startTransfer = function(path){
+        var data = querystring.stringify({
             start:'start'
         });
         self.connection.request({
-                path: self.transfers[0]+'/action',
+                path: path+'/action',
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
-                    'Content-Length': Buffer.byteLength(postData)
+                    'Content-Length': Buffer.byteLength(data)
                 },
-                postData:postData
+                data:data
             },
             function(res){
                 res.setEncoding('utf8');
                 res.on('data', function (chunk) {
-                    console.log('Response: ' + chunk);
+                    //console.log('Response: ' + chunk);
+                });
+                res.on('end', function(){
+                    console.log('end');
                 });
 
             });
-        /*self.connection.on('end', function() {
-            console.log('end');
-        });*/
-        //self.connection.write(postData);
-        //self.connection.end();
     };
 
-    this.connection.request({
-            path: '/transfers',
-            method: 'GET'
-    }, 
-    function (res) {
-        res.setEncoding();
-        var buffer="";
-        res.on('data', function (data) {
-            buffer += data;
-        });
-        res.on('end', function(){
-            var $ = cheerio.load(buffer);
-            $('.xferstable tr td a').each(function() {
-                self.transfers.push($(this).attr('href'));
-            });
-            self.printTransfers();
-            self.startTransfer();
-        });
-        res.on('error', function (err) {
-            console.log('Error loading');
-        });
-    });
+    this.getTransfers = function(){
+        this.connection.request({
+                path: '/transfers',
+                method: 'GET'
+            },
+            function (res) {
+                res.setEncoding();
+                var buffer="";
+                res.on('data', function (data) {
+                    buffer += data;
+                });
+                res.on('end', function(){
+                    var $ = cheerio.load(buffer);
+                    $('.xferstable tr td a').each(function() {
+                        self.transfers.push($(this).attr('href'));
+                    });
+                    self.printTransfers();
+                    self.startTransfer(self.transfers[1]);
+                });
+                res.on('error', function (err) {
+                    console.log('Error loading');
+                });
+            }
+        );
+    };
+
 }
