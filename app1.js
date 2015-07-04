@@ -5,6 +5,8 @@
 var zmq = require('zmq');
 var localIP = require('ip');
 var APP_PORT = '9002';
+var db = {};
+
 function Peer(ip){
     var self = this;
 
@@ -16,12 +18,28 @@ function Peer(ip){
     this.onMessageRecieved = function(data){
         console.log('Peer '+self.ip+' recieved '+data.toString());
         var message = JSON.parse(data.toString());
-        if(message.type == 'PEER_ADDED'){
-            self.message(JSON.stringify({
-                type:'GET_PEER_LIST',
-                ip:self.ip
-            }));
+        if(message.type == 'STATUS'){
+            if(message.status == 'PEER_ADDED'){
+                for (var key in db) {
+                    if (db.hasOwnProperty(key)) {
+                        db[key].message(JSON.stringify({type:'GET_PEER_LIST'}));
+                    }
+                }
+            }
         }
+        if(message.type == 'PEER_LIST'){
+            for(var i=0; i<message.peerList.length; i++){
+                var ip = message.peerList[i];
+                if(!db.hasOwnProperty(ip)){
+                    db[ip] = new Peer(ip);
+                    db[ip].message(JSON.stringify({
+                        type:'CONNECT',
+                        ip:'tcp://'+localIP.address()+':'+APP_PORT
+                    }));
+                }
+            }
+        }
+
         //self.message(JSON.stringify({STATUS:'OK'}))
     };
     this.socket.on('message', this.onMessageRecieved);
@@ -32,10 +50,10 @@ function Peer(ip){
     };
 }
 
+
 function Application(ip){
     self = this;
     this.ip = ip;
-    this.db = {};
     this.socket = zmq.socket('rep');
     this.socket.bind(self.ip, function(err) {
         if (err) throw err;
@@ -45,58 +63,37 @@ function Application(ip){
     this.onMessageRecieved = function(data){
         console.log('Application '+self.ip+' recieved '+data.toString());
         var message = JSON.parse(data.toString());
+
         if(message.type == 'CONNECT'){
-            self.db[message.ip] =  new Peer(message.ip);
-            console.log('PEER_ADDED '+JSON.stringify(self.db[message.ip]));
-            self.db[message.ip].message(JSON.stringify({
+            db[message.ip] =  new Peer(message.ip);
+            console.log('PEER_ADDED '+JSON.stringify(db[message.ip]));
+            self.socket.send(JSON.stringify({
                 type:'STATUS',
                 status:'PEER_ADDED'
             }));
         }
+
         if(message.type == 'GET_PEER_LIST'){
             var peerList = [];
-            for (var key in self.db) {
-                if (self.db.hasOwnProperty(key)) {
+            for (var key in db) {
+                if (db.hasOwnProperty(key)) {
                     peerList.push(key);
                 }
             }
-            self.db[message.ip].message(JSON.stringify({
+            self.socket.send(JSON.stringify({
                 type:'PEER_LIST',
                 peerList:peerList
             }));
         }
-        if(message.type == 'PEER_LIST'){
-            for(var ip in message.peerList){
-                if(!self.db.hasOwnProperty(ip)){
-                    self.db[ip] = new Peer(ip);
-                    self.db[ip].message(JSON.stringify({
-                        type:'CONNECT',
-                        ip:'tcp://'+localIP.address()+':'+APP_PORT
-                    }));
-                }
-            }
-        }
-        if(message.type == 'STATUS'){
-            if(message.status == 'PEER_ADDED'){
-                for (var key in self.db) {
-                    if (self.db.hasOwnProperty(key)) {
-                        self.db[key].message(JSON.stringify({
-                            type:'GET_PEER_LIST',
-                            ip:'tcp://'+localIP.address()+':'+APP_PORT
-                        }));
-                    }
-                }
-            }
-        }
         console.log('Connected To:<---------');
-        for(var key in self.db){
-            if(self.db.hasOwnProperty(key)){
+        for(var key in db){
+            if(db.hasOwnProperty(key)){
                 console.log(key);
             }
         }
         console.log('--------->');
 
-    }
+    };
     this.socket.on('message', this.onMessageRecieved);
 
     if(process.argv.slice(2).length!=0){
@@ -106,7 +103,7 @@ function Application(ip){
             type:'CONNECT',
             ip:'tcp://'+localIP.address()+':'+APP_PORT
         }));
-        this.db[ip]=peer;
+        db[ip]=peer;
     }
 };
 
