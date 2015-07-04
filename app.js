@@ -98,13 +98,17 @@ function Application(ip){
 
     if(process.argv.slice(2).length!=0){
         var ip = process.argv.slice(2)[0];
-        var peer = new Peer(ip);
-        peer.message(JSON.stringify({
-            type:'CONNECT',
-            ip:'tcp://'+localIP.address()+':'+APP_PORT
-        }));
-        db[ip]=peer;
+        
     }
+    else{
+        var ip = 'tcp://'+localIP.address()+':'+APP_PORT
+    }
+    var peer = new Peer(ip);
+    peer.message(JSON.stringify({
+        type:'CONNECT',
+        ip:'tcp://'+localIP.address()+':'+APP_PORT
+    }));
+    db[ip]=peer;
 };
 
 var app = new Application('tcp://*:'+APP_PORT);
