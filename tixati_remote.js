@@ -67,6 +67,7 @@ function TixatiRemote(host, port, username, password){
                 });
                 res.on('error', function (err) {
                     console.log('Error loading');
+
                 });
             }
         );

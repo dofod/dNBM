@@ -85,6 +85,26 @@ function Application(ip){
                 peerList:peerList
             }));
         }
+
+        if(message.type == 'APP'){
+            if(message.app[0]!='.'&&message.app[1]!='/'){
+                message.app = './'+message.app
+            }
+            var module = require(message.app);
+            module(message.payload);
+            
+            if(!message.hasOwnProperty('repeat')||message.repeat==true){
+                message['repeat'] = false;
+                for (var key in db) {
+                    if (db.hasOwnProperty(key) && key!='tcp://'+localIP.address()+':'+APP_PORT) {
+                        db[key].message(JSON.stringify(message));
+                    }
+                }
+            }
+            
+            self.socket.send(JSON.stringify({type:'STATUS', status:'OK'}))
+        }
+
         console.log('Connected To:<---------');
         for(var key in db){
             if(db.hasOwnProperty(key)){
